@@ -86,7 +86,7 @@ pub struct Platform {
     //gpio: &'static capsules::gpio::GPIO<'static, nrf5x::gpio::GPIOPin>,
     led: &'static capsules::led::LED<'static, nrf5x::gpio::GPIOPin>,
     //temp: &'static capsules::temperature::TemperatureSensor<'static>,
-    //alarm: &'static AlarmDriver<'static, VirtualMuxAlarm<'static, Rtc>>,
+    alarm: &'static AlarmDriver<'static, VirtualMuxAlarm<'static, Rtc>>,
     //rng: &'static capsules::rng::SimpleRng<'static, nrf5x::trng::Trng<'static>>,
 }
 
@@ -98,7 +98,7 @@ impl kernel::Platform for Platform {
         match driver_num {
             //capsules::console::DRIVER_NUM => f(Some(self.console)),
             //capsules::gpio::DRIVER_NUM => f(Some(self.gpio)),
-            //capsules::alarm::DRIVER_NUM => f(Some(self.alarm)),
+            capsules::alarm::DRIVER_NUM => f(Some(self.alarm)),
             capsules::led::DRIVER_NUM => f(Some(self.led)),
             //capsules::button::DRIVER_NUM => f(Some(self.button)),
             //capsules::rng::DRIVER_NUM => f(Some(self.rng)),
@@ -212,7 +212,7 @@ pub unsafe fn reset_handler() {
         AlarmDriver::new(virtual_alarm1,
                          kernel::Grant::create()),
                          12);
-    virtual_alarm1.set_client(alarm); */
+    virtual_alarm1.set_client(alarm);
 /*
     let ble_radio_virtual_alarm = static_init!(
         VirtualMuxAlarm<'static, Rtc>,
@@ -259,7 +259,7 @@ pub unsafe fn reset_handler() {
     nrf5x::clock::CLOCK.low_stop();
     nrf5x::clock::CLOCK.high_stop();
 
-    nrf5x::clock::CLOCK.low_set_source(nrf5x::clock::LowClockSource::XTAL);
+    nrf5x::clock::CLOCK.low_set_source(nrf5x::clock::LowClockSource::RC);
     nrf5x::clock::CLOCK.low_start();
     nrf5x::clock::CLOCK.high_start();
     while !nrf5x::clock::CLOCK.low_started() {}
@@ -273,7 +273,7 @@ pub unsafe fn reset_handler() {
         //gpio: gpio,
         led: led,
         //rng: rng,
-        //alarm: alarm,
+        alarm: alarm,
         //temp: temp,
     };
 
