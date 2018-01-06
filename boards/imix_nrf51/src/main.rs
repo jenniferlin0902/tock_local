@@ -8,27 +8,10 @@
 //!
 //! ### Pin configuration
 //! * 0 -> LED1 (pin 13) // only this one
-//! * 1 -> LED2 (pin 22)
-//! * 2 -> LED3 (pin 23)
-//! * 3 -> LED4 (pin 24)
-//! * 5 -> BUTTON1 (pin 17)
-//! * 6 -> BUTTON2 (pin 18)
-//! * 7 -> BUTTON3 (pin 19)
-//! * 8 -> BUTTON4 (pin 20)
-//! * 9 -> P0.01   (bottom left header)
-//! * 10 -> P0.02   (bottom left header)
-//! * 11 -> P0.03   (bottom left header)
-//! * 12 -> P0.04   (bottom left header)
-//! * 12 -> P0.05   (bottom left header)
-//! * 13 -> P0.06   (bottom left header)
-//! * 14 -> P0.19   (mid right header)
-//! * 15 -> P0.18   (mid right header)
-//! * 16 -> P0.17   (mid right header)
-//! * 17 -> P0.16   (mid right header)
-//! * 18 -> P0.15   (mid right header)
-//! * 19 -> P0.14   (mid right header)
-//! * 20 -> P0.13   (mid right header)
-//! * 21 -> P0.12   (mid right header)
+//! * 1 -> UART_TX (pin 3)
+//! * 2 -> UART_RX (pin 4)
+//! * 3 -> UART_CTS (pin 6)
+//! * 4 -> UART_RTS (pin 7)
 //!
 //! ### Authors
 //! * Philip Levis <pal@cs.stanford.edu>
@@ -82,7 +65,7 @@ pub struct Platform {
     //                                                       nrf51::radio::Radio,
     //                                                       VirtualMuxAlarm<'static, Rtc>>,
     //button: &'static capsules::button::Button<'static, nrf5x::gpio::GPIOPin>,
-    //console: &'static capsules::console::Console<'static, nrf51::uart::UART>,
+    console: &'static capsules::console::Console<'static, nrf51::uart::UART>,
     //gpio: &'static capsules::gpio::GPIO<'static, nrf5x::gpio::GPIOPin>,
     led: &'static capsules::led::LED<'static, nrf5x::gpio::GPIOPin>,
     //temp: &'static capsules::temperature::TemperatureSensor<'static>,
@@ -96,7 +79,7 @@ impl kernel::Platform for Platform {
         where F: FnOnce(Option<&kernel::Driver>) -> R
     {
         match driver_num {
-            //capsules::console::DRIVER_NUM => f(Some(self.console)),
+            capsules::console::DRIVER_NUM => f(Some(self.console)),
             //capsules::gpio::DRIVER_NUM => f(Some(self.gpio)),
             capsules::alarm::DRIVER_NUM => f(Some(self.alarm)),
             capsules::led::DRIVER_NUM => f(Some(self.led)),
@@ -171,13 +154,12 @@ pub unsafe fn reset_handler() {
         pin.set_client(gpio);
     } */
 
-/*
+
     nrf51::uart::UART0.configure(Pinmux::new(3), /*. tx  */
                                  Pinmux::new(4), /* rx  */
                                  Pinmux::new(6), /* cts */
                                  Pinmux::new(7) /*. rts */);
-    */
-    /*
+    
     let console = static_init!(
         capsules::console::Console<nrf51::uart::UART>,
         capsules::console::Console::new(&nrf51::uart::UART0,
@@ -186,17 +168,17 @@ pub unsafe fn reset_handler() {
                                         kernel::Grant::create()),
                                         224/8);
     UART::set_client(&nrf51::uart::UART0, console);
-    console.initialize(); */
+    console.initialize();
 
     // Attach the kernel debug interface to this console
-    /*
+    
     let kc = static_init!(
         capsules::console::App,
         capsules::console::App::default(),
         480/8);
     kernel::debug::assign_console_driver(Some(console), kc);
-    */
-    /*
+
+    
     let rtc = &nrf5x::rtc::RTC;
     rtc.start();
     let mux_alarm = static_init!(MuxAlarm<'static, Rtc>, MuxAlarm::new(&RTC), 16);
@@ -269,7 +251,7 @@ pub unsafe fn reset_handler() {
         //aes: aes,
         //ble_radio: ble_radio,
         //button: button,
-        //console: console,
+        console: console,
         //gpio: gpio,
         led: led,
         //rng: rng,
@@ -277,13 +259,14 @@ pub unsafe fn reset_handler() {
         //temp: temp,
     };
 
-    //rtc.start();
+    rtc.start();
 
     let mut chip = nrf51::chip::NRF51::new();
     chip.systick().reset();
     chip.systick().enable(true);
 
-    //debug!("Initialization complete. Entering main loop");
+    debug!("Initialization complete. Entering main loop");
+    debug!("Hello~ second line works");
     extern "C" {
         /// Beginning of the ROM region containing app images.
         static _sapps: u8;
